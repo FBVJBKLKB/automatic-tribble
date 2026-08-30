@@ -1,0 +1,32 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV HOME=/root
+ENV DISPLAY=:1
+ENV RESOLUTION=1280x800x24
+
+# --- نصب دسکتاپ سبک XFCE + ابزار VNC ---
+# نکته: tightvncserver روی اوبونتو 22.04 موجود نیست؛ tigervnc جایگزین رسمی آن است
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    xfce4 xfce4-terminal xfce4-goodies \
+    tigervnc-standalone-server tigervnc-common tigervnc-tools \
+    dbus-x11 x11-xserver-utils \
+    git curl wget nano sudo \
+    python3 python3-pip \
+    build-essential \
+    net-tools iproute2 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# --- نصب noVNC برای دسترسی از مرورگر ---
+RUN git clone --depth 1 https://github.com/novnc/noVNC.git /opt/noVNC \
+    && git clone --depth 1 https://github.com/novnc/websockify /opt/noVNC/utils/websockify \
+    && ln -s /opt/noVNC/vnc.html /opt/noVNC/index.html
+
+# --- کپی اسکریپت راه‌اندازی ---
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+# پورت پیش‌فرض Railway از طریق متغیر PORT تزریق می‌شود
+EXPOSE 8080
+
+CMD ["/start.sh"]
